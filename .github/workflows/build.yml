@@ -11,6 +11,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: zerotier-ax3000t-build
+  cancel-in-progress: true
+
 env:
   LEDE_REPO: coolsnowwolf/lede
   # Last LEDE commit with kernel 6.1.124 (matches LEDE R25.1.1 / AX3000T).
@@ -124,7 +128,12 @@ jobs:
       - name: Build firmware and packages
         run: |
           cd lede
-          make -j"$(nproc)" V=s 2>&1 | tee build.log
+          set +e
+          make -j"$(nproc)" > build.log 2>&1
+          rc=$?
+          set -e
+          tail -n 200 build.log
+          exit $rc
 
       - name: Upload build log
         if: always()
