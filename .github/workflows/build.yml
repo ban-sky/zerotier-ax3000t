@@ -124,29 +124,34 @@ jobs:
       - name: Build firmware and packages
         run: |
           cd lede
-          make -j"$(nproc)" V=s
+          make -j"$(nproc)" V=s 2>&1 | tee build.log
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-${{ github.run_number }}
+          path: lede/build.log
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Collect artifacts
         run: |
+          set -x
           mkdir -p "$GITHUB_WORKSPACE/artifacts"
 
-          find bin -type f \( \
-            -name 'zerotier_*.ipk' -o \
-            -name 'luci-app-zerotier_*.ipk' -o \
-            -name 'kmod-tun_*.ipk' -o \
-            -name 'libminiupnpc_*.ipk' -o \
-            -name 'libnatpmp_*.ipk' -o \
-            -name 'libstdcpp_*.ipk' -o \
-            -name 'libatomic*.ipk' -o \
-            -name 'ip_*.ipk' \
-          \) -exec cp -v {} "$GITHUB_WORKSPACE/artifacts/" \;
+          echo "=== built ipk files ==="
+          find bin -type f -name '*.ipk' -printf '%p\n' | sort
+          echo "=== target images ==="
+          find bin/targets -type f -name '*sysupgrade*' -printf '%p\n' | sort
 
+          find bin -type f -name '*.ipk' -exec cp -v {} "$GITHUB_WORKSPACE/artifacts/" \;
           find bin/targets/mediatek/filogic -maxdepth 1 -type f \
-            -name '*sysupgrade.bin' \
+            -name '*sysupgrade*' \
             -exec cp -v {} "$GITHUB_WORKSPACE/artifacts/" \;
 
           for pat in 'zerotier_*.ipk' 'luci-app-zerotier_*.ipk' 'kmod-tun_*.ipk'; do
-            if ! find "$GITHUB_WORKSPACE/artifacts" -maxdepth 1 -name "$pat" -print -quit | grep -q .; then
+            if ! ls "$GITHUB_WORKSPACE/artifacts"/$pat >/dev/null 2>&1; then
               echo "ERROR: missing artifact ${pat}"
               exit 1
             fi
@@ -155,11 +160,12 @@ jobs:
           ls -lh "$GITHUB_WORKSPACE/artifacts"
 
       - name: Upload build artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: zerotier-ax3000t-${{ github.run_number }}
           path: artifacts/*
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
 
       - name: Publish GitHub Release
