@@ -147,6 +147,7 @@ jobs:
       - name: Collect artifacts
         run: |
           set -x
+          cd lede
           mkdir -p "$GITHUB_WORKSPACE/artifacts"
 
           echo "=== built ipk files ==="
