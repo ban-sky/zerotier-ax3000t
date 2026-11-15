@@ -49,22 +49,24 @@ LuCI 页面位于 **VPN → ZeroTier**，支持：
 - 依赖包（`libstdcpp`、`libatomic`、`ip`，若构建系统输出）
 - `*sysupgrade.bin`（整机固件，可选备用）
 
-首次完整编译约 1.5–2.5 小时。
+首次完整编译约 1 小时。
+
+> Artifacts 里包含整机编译出的**全部 ipk**（约 25 MB），不要执行 `opkg install *.ipk`。只安装下面列出的 ZeroTier 相关包即可。
 
 ## 安装
 
-把 Release 中的 ipk 下载到路由器（或从电脑 `scp` 上传），然后：
+把 Artifacts 中的 ipk 下载到路由器（或从电脑 `scp` 上传），然后：
 
 ```sh
 # 如果之前装过旧版 luci-app-zerotier，先移除它（旧包会占用 /etc/init.d/zerotier）
 opkg remove luci-app-zerotier zerotier --force-depends
 
-# 安装依赖和主程序（同一目录下执行）
+# 只安装 ZeroTier 相关包，不要装整个目录
 opkg install libminiupnpc_*.ipk libnatpmp_*.ipk kmod-tun_*.ipk \
              zerotier_*.ipk luci-app-zerotier_*.ipk
 ```
 
-如果 `libstdcpp`、`libatomic` 或 `ip` 未安装，`opkg` 会从软件源自动拉取；也可以把构建产物中的对应 ipk 一起安装。
+如果 `libstdcpp`、`libatomic` 或 `ip` 未安装，`opkg` 会从软件源自动拉取；也可以单独安装 Artifacts 里对应的 ipk。
 
 安装后刷新 LuCI，进入 **VPN → ZeroTier**：
 
