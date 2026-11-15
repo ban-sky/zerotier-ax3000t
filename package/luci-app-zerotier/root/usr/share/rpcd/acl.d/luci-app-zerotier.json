@@ -1,0 +1,14 @@
+{
+	"luci-app-zerotier": {
+		"description": "Grant access to the ZeroTier configuration",
+		"read": {
+			"ubus": {
+				"service": [ "list" ]
+			},
+			"uci": [ "zerotier" ]
+		},
+		"write": {
+			"uci": [ "zerotier" ]
+		}
+	}
+}
